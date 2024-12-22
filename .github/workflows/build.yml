@@ -1,0 +1,36 @@
+name: Clone and Compress AOSP
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  clone-and-compress:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up dependencies
+      run: |
+        sudo apt update
+        sudo apt install git-core gnupg zip -y
+
+    - name: Initialize and sync AOSP
+      run: |
+        mkdir aosp
+        cd aosp
+        repo init -u https://android.googlesource.com/platform/manifest -b android-15.0.0_r9
+        repo sync -j$(nproc)
+        cd ..
+
+    - name: Compress AOSP source
+      run: |
+        zip -r aosp_source.zip aosp
+
+    - name: Upload AOSP source
+      uses: actions/upload-artifact@v3
+      with:
+        name: AOSP_Source
+        path: aosp_source.zip
